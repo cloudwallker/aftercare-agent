@@ -1,0 +1,8 @@
+{
+  "mode": "http",
+  "status": "not_run",
+  "sample_count": 0,
+  "tokens": null,
+  "business_accuracy": null,
+  "reason": "真实模型未验证：模型地址、名称或凭据未配置。"
+}

@@ -1,0 +1,59 @@
+name: aftercare-test
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: aftercare_test
+      POSTGRES_PASSWORD: local-test-admin-demo
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+
+  migrate:
+    environment:
+      APP_ROLE: migrate
+      MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:local-test-admin-demo@postgres:5432/aftercare_test
+
+  tests:
+    build:
+      context: .
+      target: tests
+    environment:
+      TEST_APP_DATABASE_URL: postgresql+psycopg://aftercare_app:local-app-demo@postgres:5432/aftercare_test
+      TEST_MERCHANT_DATABASE_URL: postgresql+psycopg://aftercare_merchant:local-merchant-demo@postgres:5432/aftercare_test
+      TEST_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:local-test-admin-demo@postgres:5432/aftercare_test
+      CLIENT_TOKEN: local-test-client-demo
+      REVIEWER_TOKEN: local-test-reviewer-demo
+      MERCHANT_TOKEN: local-test-merchant-demo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  seed:
+    environment:
+      MERCHANT_DATABASE_URL: postgresql+psycopg://aftercare_merchant:local-merchant-demo@postgres:5432/aftercare_test
+
+  api:
+    environment:
+      APP_DATABASE_URL: postgresql+psycopg://aftercare_app:local-app-demo@postgres:5432/aftercare_test
+      CLIENT_TOKEN: local-test-client-demo
+      REVIEWER_TOKEN: local-test-reviewer-demo
+    ports: !override
+      - "127.0.0.1::8000"
+
+  merchant:
+    environment:
+      MERCHANT_DATABASE_URL: postgresql+psycopg://aftercare_merchant:local-merchant-demo@postgres:5432/aftercare_test
+      MERCHANT_TOKEN: local-test-merchant-demo
+
+  worker:
+    environment:
+      MODEL_MODE: mock
+      MODEL_BASE_URL: ""
+      MODEL_API_KEY: ""
+      MODEL_NAME: ""
+      APP_DATABASE_URL: postgresql+psycopg://aftercare_app:local-app-demo@postgres:5432/aftercare_test
+      MERCHANT_TOKEN: local-test-merchant-demo
+
+volumes:
+  postgres-test-data:

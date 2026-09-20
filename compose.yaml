@@ -1,0 +1,107 @@
+name: aftercare
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aftercare}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-admin-demo}
+      TZ: UTC
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/001-roles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    # 数据库和商家都不映射宿主端口。
+
+  migrate:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ROLE: migrate
+      MIGRATION_DATABASE_URL: ${MIGRATION_DATABASE_URL:-postgresql+psycopg://postgres:local-admin-demo@postgres:5432/aftercare}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "alembic", "upgrade", "head"]
+
+  seed:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ROLE: seed
+      MERCHANT_DATABASE_URL: ${MERCHANT_DATABASE_URL:-postgresql+psycopg://aftercare_merchant:local-merchant-demo@postgres:5432/aftercare}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["uv", "run", "--no-sync", "python", "-m", "mock_merchant.seed"]
+
+  merchant:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ROLE: merchant
+      MERCHANT_DATABASE_URL: ${MERCHANT_DATABASE_URL:-postgresql+psycopg://aftercare_merchant:local-merchant-demo@postgres:5432/aftercare}
+      MERCHANT_TOKEN: ${MERCHANT_TOKEN:-local-merchant-token-demo}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command: ["uv", "run", "--no-sync", "uvicorn", "mock_merchant.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    healthcheck:
+      test: ["CMD", ".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ROLE: api
+      APP_DATABASE_URL: ${APP_DATABASE_URL:-postgresql+psycopg://aftercare_app:local-app-demo@postgres:5432/aftercare}
+      CLIENT_TOKEN: ${CLIENT_TOKEN:-local-client-token-demo}
+      REVIEWER_TOKEN: ${REVIEWER_TOKEN:-local-reviewer-token-demo}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    command: ["uv", "run", "--no-sync", "uvicorn", "aftercare.api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", ".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+
+  worker:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ROLE: worker
+      APP_DATABASE_URL: ${APP_DATABASE_URL:-postgresql+psycopg://aftercare_app:local-app-demo@postgres:5432/aftercare}
+      MERCHANT_TOKEN: ${MERCHANT_TOKEN:-local-merchant-token-demo}
+      MERCHANT_BASE_URL: http://merchant:8001
+      MODEL_MODE: ${MODEL_MODE:-mock}
+      MODEL_BASE_URL: ${MODEL_BASE_URL:-}
+      MODEL_API_KEY: ${MODEL_API_KEY:-}
+      MODEL_NAME: ${MODEL_NAME:-}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      LEASE_SECONDS: ${LEASE_SECONDS:-20}
+      HEARTBEAT_SECONDS: ${HEARTBEAT_SECONDS:-5}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      merchant:
+        condition: service_healthy
+    command: ["uv", "run", "--no-sync", "python", "-m", "aftercare.worker"]
+    stop_grace_period: 15s
+
+volumes:
+  postgres-data:
