@@ -4,6 +4,8 @@
 
 A durable after-sales agent with human approval, crash recovery, and idempotent simulated refunds. Built with Python 3.12, FastAPI, PostgreSQL, SQLAlchemy, and httpx.
 
+![aftercare-agent](docs/images/cartoon-infographic.png)
+
 ## What it does
 
 - Investigates orders using three read-only tools and proposes a refund.

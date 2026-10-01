@@ -6,6 +6,8 @@
 
 已实现持久任务、只读调查 Agent、人工审批与模拟退款对账。独立 Worker 使用 MockProvider 生成待审批方案，审核员批准后冻结原请求并按幂等键执行、查询退款；结果无法确定时进入人工核查。已提供 SSE 断线续传、三条故障演示及 HTTP 工具调用模型适配器。任务 1～8 的离线 MVP 已完成；真实模型端到端尚未验证。
 
+![aftercare-agent](docs/images/cartoon-infographic.png)
+
 ## 阅读顺序
 
 1. [完整项目设计](docs/superpowers/specs/2026-09-18-aftercare-agent-design.md)：业务范围、参考项目、架构、8 张表、状态机、API、可靠性协议和 22 组验收用例。
