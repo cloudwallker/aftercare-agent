@@ -3,6 +3,7 @@
 import re
 import subprocess
 import sys
+from hashlib import sha256
 from pathlib import PurePosixPath
 
 RULES = {
@@ -31,6 +32,12 @@ FORBIDDEN_PARTS = {
     "build",
 }
 FORBIDDEN_SUFFIXES = {".pem", ".key", ".p12", ".pfx", ".pyc", ".log", ".db", ".sqlite"}
+# Reviewed project illustration; content changes require a fresh visual/metadata review.
+# Keep both the exact path and digest pinned, rather than allowing image extensions.
+REVIEWED_BINARY_SHA256 = {
+    "docs/images/cartoon-infographic.png":
+        "954909c0607c7376ad28f04ba1c7cde3e986ee8d24da1d123844b3c4e123aa87",
+}
 
 
 def main():
@@ -49,6 +56,10 @@ def main():
             findings.append((name, 0, "forbidden-file"))
             continue
         data = subprocess.run(["git", "show", ":" + name], check=True, capture_output=True).stdout
+        if name in REVIEWED_BINARY_SHA256:
+            if sha256(data).hexdigest() != REVIEWED_BINARY_SHA256[name]:
+                findings.append((name, 0, "reviewed-binary-content-changed"))
+            continue
         if len(data) > 2_000_000:
             findings.append((name, 0, "oversized-file"))
             continue

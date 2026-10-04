@@ -28,3 +28,8 @@ coverage.xml
 Thumbs.db
 .agents/
 .codex/
+
+# Local development plans and execution records
+/docs/superpowers/
+/docs/implementation-progress.md
+/docs/ci-repair-2026-10-04.md

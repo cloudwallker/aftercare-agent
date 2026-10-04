@@ -5,7 +5,7 @@ on:
 permissions:
   contents: read
 jobs:
-  test:
+  release-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -16,7 +16,13 @@ jobs:
           python-version: "3.12"
       - run: uv sync --locked
       - run: uv run ruff check .
+      - run: uv run pytest tests/release -q
       - run: uv run python scripts/check_release.py
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
       - run: docker compose -p aftercare-test -f compose.yaml -f compose.test.yaml run --rm --build tests
       - if: always()
         run: docker compose -p aftercare-test -f compose.yaml -f compose.test.yaml down
