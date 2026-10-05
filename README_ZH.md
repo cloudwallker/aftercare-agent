@@ -2,13 +2,15 @@
 
 [English](README.md) | 简体中文
 
-**v0.1.0 · MIT** — 带人工审批、故障恢复和幂等对账的模拟售后退款 Agent。
+### 带人工审批、故障恢复和幂等对账的模拟退款 Agent
 
-已实现持久任务、只读调查 Agent、人工审批与模拟退款对账。独立 Worker 使用 MockProvider 生成待审批方案，审核员批准后冻结原请求并按幂等键执行、查询退款；结果无法确定时进入人工核查。已提供 SSE 断线续传、三条故障演示及 HTTP 工具调用模型适配器。离线模拟 MVP 已完成；真实模型端到端尚未验证。
+**调查模拟订单，将人工审批绑定到不可变退款方案，并使用原幂等键恢复中断任务、核查退款结果。** 独立 Worker 持久化任务与检查点，通过 SSE 提供可续传事件；可使用 MockProvider 离线演示，也可配置兼容 Chat Completions 的 HTTP 模型。结果无法确定时进入人工核查。
+
+**v0.1.0 · MIT** · Python 3.12、FastAPI、PostgreSQL、SQLAlchemy、httpx。
 
 ![aftercare-agent](docs/images/cartoon-infographic.png)
 
-*项目流程概念示意图；不代表真实支付或运行截图。*
+*模拟退款工作流的概念示意图。*
 
 ## 阅读顺序
 
@@ -18,7 +20,7 @@
 
 ## 项目定位
 
-一个参考 nanobot 的小型售后工单 Agent 后端。Agent 查询模拟订单和物流，提出退款建议；人工审批后由确定性执行器完成模拟退款。
+面向模拟售后工单的 Agent 后端。Agent 查询订单和物流，提出退款建议；人工审批后由确定性执行器完成模拟退款。
 
 重点展示三项后端能力：
 
@@ -26,7 +28,7 @@
 - 独立 Worker 的持久任务、检查点和故障恢复。
 - 外部操作结果未知时，原幂等键对账与重复退款防护。
 
-采用 Python 3.12、FastAPI、PostgreSQL。默认无模型 Key 也能演示；真实模型接入是可配置能力。第一版不做前端、真实支付、Redis、多 Agent 或 RAG。
+当前版本由 API、独立 Worker 和模拟商家组成，提供本地退款工作流及三条故障演示。默认使用 MockProvider，HTTP 模型接入通过配置启用。架构参考来源见 [来源说明](docs/references.md)。
 
 ## 本地单元测试
 

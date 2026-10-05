@@ -10,7 +10,7 @@ English | [简体中文](README_ZH.md)
 
 ![Aftercare Agent workflow concept](docs/images/cartoon-infographic.png)
 
-*Concept illustration of the simulated workflow; not a running UI or real payment system.*
+*Concept illustration of the simulated refund workflow.*
 
 ## What it does
 
@@ -21,7 +21,7 @@ English | [简体中文](README_ZH.md)
 - Streams ordered task events over SSE with reconnection support.
 - Runs offline with MockProvider or connects to a Chat Completions compatible HTTP model.
 
-**v0.1.0 is a local simulation MVP.** It does not process real payments. The original v0.1.0 suite passed 236 tests; live external-model calls have not been verified. Mock evaluation scores describe a fixed protocol baseline, not model quality.
+**v0.1.0 runs the refund workflow against a local simulated merchant.** Use the included scenarios to inspect approval, recovery, and reconciliation behavior.
 
 ## Quick start
 
@@ -65,6 +65,8 @@ The adapter disables parallel tool calls and reconstructs assistant/tool message
 
 ## Tests
 
+The original v0.1.0 suite passed 236 tests; live external-model calls have not been verified. Mock evaluation scores describe a fixed protocol baseline, not model quality.
+
 ```powershell
 uv sync --locked
 uv run ruff check .
@@ -89,6 +91,6 @@ The integration suite requires real PostgreSQL. Release regressions use temporar
 
 ## Boundaries and license
 
-No frontend, real payment integration, production-scale validation, or automatic manual-review resolution is included. Safety of repeated external calls depends on the merchant idempotency protocol; this is not a global exactly-once guarantee.
+This release provides an API and worker for simulated payments, with unresolved cases handed to manual review. Production-scale behavior has not been validated. Safety of repeated external calls depends on the merchant idempotency protocol; this is not a global exactly-once guarantee.
 
 MIT licensed; see [LICENSE](LICENSE). Dependencies retain their own licenses. Architecture inspirations are described in [references](docs/references.md); their implementation code was not copied.
