@@ -126,6 +126,35 @@ async def test_bad_output_is_correctable(message, reason):
             await HttpProvider(client, "fixture-model").next_action(context(), TOOL_SPECS)
 
 
+@pytest.mark.parametrize("boundary", ["response", "tool_arguments", "final_content"])
+async def test_deeply_nested_json_is_correctable(boundary):
+    nested = "[" * 20_000 + "0" + "]" * 20_000
+    if boundary == "response":
+        body = nested
+    else:
+        message = {"content": nested}
+        reason = "stop"
+        if boundary == "tool_arguments":
+            message = {
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "function": {"name": "get_order", "arguments": nested},
+                    }
+                ]
+            }
+            reason = "tool_calls"
+        body = json.dumps({"choices": [{"finish_reason": reason, "message": message}]})
+    assert len(body.encode("utf-8")) <= 64 * 1024
+
+    async with httpx.AsyncClient(
+        base_url="http://model/",
+        transport=httpx.MockTransport(lambda request: httpx.Response(200, content=body)),
+    ) as client:
+        with pytest.raises(InvalidModelOutput, match="^INVALID_MODEL_OUTPUT$"):
+            await HttpProvider(client, "fixture-model").next_action(context(), TOOL_SPECS)
+
+
 async def test_network_timeout_is_runtime_retryable():
     def handle(request):
         raise httpx.ReadTimeout("secret connection details", request=request)

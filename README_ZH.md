@@ -49,6 +49,8 @@ $env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.cache/python'
 
 配置通过 `load_settings()` 按 `APP_ROLE=api/worker/merchant/migrate/seed` 读取，各角色仅保存自身所需连接和密钥。导入模块不会连接数据库或启动进程。真实模型配置模式名称为 `MODEL_MODE=http`，缺少模型字段时校验失败；Worker 使用 HTTP 兼容适配器，不会自动回退 Mock。
 
+模型响应、工具参数或最终内容中的深层嵌套 JSON 统一视为无效模型输出，进入有次数上限的纠正流程。
+
 ## PostgreSQL 集成测试
 
 启动 Docker Desktop。测试使用独立 Compose project、`aftercare_test` 数据库和专属卷；不映射数据库宿主端口，不需要复制开发 `.env`。

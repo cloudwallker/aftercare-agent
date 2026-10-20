@@ -142,5 +142,5 @@ class HttpProvider:
                 if not isinstance(action, dict) or action.get("kind") != "final":
                     raise ValueError
             return parse_action(action)
-        except (ValueError, KeyError, TypeError, AttributeError, ValidationError):
+        except (ValueError, KeyError, TypeError, AttributeError, ValidationError, RecursionError):
             raise InvalidModelOutput("INVALID_MODEL_OUTPUT") from None
