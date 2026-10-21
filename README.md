@@ -63,6 +63,8 @@ Configure `MODEL_BASE_URL`, `MODEL_API_KEY`, and `MODEL_NAME` in your environmen
 
 The adapter disables parallel tool calls and reconstructs assistant/tool message pairs from durable history. Missing configuration fails explicitly; there is no silent fallback to Mock. Credentials and raw model error responses are not stored in task events.
 
+Deeply nested JSON in a response, tool arguments, or final content is treated as invalid model output and follows the bounded correction flow.
+
 ## Tests
 
 The original v0.1.0 suite passed 236 tests; live external-model calls have not been verified. Mock evaluation scores describe a fixed protocol baseline, not model quality.
